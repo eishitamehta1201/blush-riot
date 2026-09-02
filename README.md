@@ -2,8 +2,8 @@
 
 A maximalist pink fashion app — browse a weekly drop, manage your own closet, and check out. Built to demo authentication, CRUD, and a full business flow in one file.
 
-**Live app:** _add your deployed URL here_ https://heroic-dasik-b1c20e.netlify.app
-**Video walkthrough:** _add your Loom link here_
+**Live app:** _add your deployed URL here_ https://shimmering-manatee-33a857.netlify.app/
+**Video walkthrough:** _add your Loom link here_ https://www.loom.com/share/c8806683b32043778dd99b725e3199f5
 
 ## What it does
 
