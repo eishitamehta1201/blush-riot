@@ -1,0 +1,1055 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Blush Riot</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;700;900&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --riot: #FF2D87;
+    --bubblegum: #FF7AC6;
+    --plum: #1B0A14;
+    --plum-2: #2A0F1E;
+    --foil: #FFEFF6;
+    --lime: #D4FF3D;
+    --ink: #170812;
+    --white: #FFFFFF;
+    --line: rgba(23,8,18,0.12);
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{height:100%;}
+  body{
+    font-family:'Manrope', sans-serif;
+    background:
+      radial-gradient(circle at 15% 20%, rgba(255,45,135,0.25), transparent 40%),
+      radial-gradient(circle at 85% 80%, rgba(212,255,61,0.12), transparent 45%),
+      var(--plum);
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:28px 12px;
+    color:var(--ink);
+  }
+  button{font-family:inherit; cursor:pointer; border:none; background:none;}
+  input, textarea, select{font-family:inherit; font-size:15px;}
+  ::selection{background:var(--riot); color:var(--white);}
+  :focus-visible{outline:3px solid var(--lime); outline-offset:2px;}
+
+  /* ---- phone shell ---- */
+  .phone{
+    width:412px; max-width:100%;
+    height:860px; max-height:94vh;
+    background:var(--foil);
+    border-radius:44px;
+    border:10px solid var(--plum-2);
+    box-shadow:0 40px 90px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.03);
+    position:relative;
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+  }
+  .notch{
+    position:absolute; top:0; left:50%; transform:translateX(-50%);
+    width:130px; height:24px; background:var(--plum-2);
+    border-radius:0 0 16px 16px; z-index:50;
+  }
+
+  /* ---- marquee ---- */
+  .marquee{
+    background:var(--ink); color:var(--foil);
+    overflow:hidden; white-space:nowrap;
+    padding:7px 0; font-family:'Unbounded'; font-size:11px; font-weight:600;
+    letter-spacing:0.02em; flex-shrink:0;
+  }
+  .marquee span{
+    display:inline-block; padding-right:36px;
+    animation: scroll 16s linear infinite;
+  }
+  .marquee span::after{ content:"  •  NEW DROP WEEKLY  •  FREE RETURNS  •  MADE FOR THE UNBOTHERED  •  "; }
+  @keyframes scroll{ from{transform:translateX(0);} to{transform:translateX(-50%);} }
+  @media (prefers-reduced-motion: reduce){ .marquee span{ animation:none; } }
+
+  /* ---- screens ---- */
+  .screen{ flex:1; overflow-y:auto; display:none; }
+  .screen.active{ display:flex; flex-direction:column; }
+  .screen::-webkit-scrollbar{ width:0; }
+
+  /* ---- auth screen ---- */
+  #screen-auth{
+    background:
+      repeating-radial-gradient(circle at 0 0, rgba(255,255,255,0.05) 0 2px, transparent 2px 22px),
+      linear-gradient(160deg, var(--riot) 0%, #C4106A 55%, var(--plum) 100%);
+    justify-content:center; padding:36px 30px; color:var(--white);
+  }
+  .wordmark{
+    font-family:'Unbounded'; font-weight:900; font-size:44px; line-height:0.92;
+    letter-spacing:-0.01em; margin-bottom:6px;
+  }
+  .wordmark em{ font-style:normal; color:var(--lime); }
+  .tagline{ font-size:14px; opacity:0.85; margin-bottom:34px; max-width:26ch; }
+  .authcard{
+    background:var(--foil); border-radius:24px; padding:26px 22px;
+    color:var(--ink); box-shadow:0 18px 40px rgba(0,0,0,0.35);
+  }
+  .authtabs{ display:flex; gap:6px; background:rgba(23,8,18,0.06); padding:4px; border-radius:12px; margin-bottom:20px; }
+  .authtabs button{
+    flex:1; padding:9px 0; border-radius:9px; font-weight:700; font-size:13.5px; color:var(--ink); opacity:0.5;
+  }
+  .authtabs button.active{ background:var(--ink); color:var(--foil); opacity:1; }
+  .field{ margin-bottom:14px; }
+  .field label{ display:block; font-size:12px; font-weight:700; margin-bottom:6px; opacity:0.7; }
+  .field input{
+    width:100%; padding:12px 14px; border-radius:12px; border:2px solid var(--line);
+    background:var(--white); font-size:14.5px;
+  }
+  .field input:focus{ border-color:var(--riot); outline:none; }
+  .err{ color:var(--riot); font-size:12.5px; font-weight:700; margin:-6px 0 14px; min-height:0; }
+  .btn-primary{
+    width:100%; padding:14px; border-radius:14px; background:var(--riot); color:var(--white);
+    font-weight:800; font-size:15px; letter-spacing:0.01em; transition:transform .12s ease;
+  }
+  .btn-primary:active{ transform:scale(0.97); }
+  .btn-lime{ background:var(--lime); color:var(--ink); }
+  .switchline{ text-align:center; font-size:12.5px; margin-top:16px; opacity:0.6; }
+  .switchline b{ color:var(--riot); cursor:pointer; opacity:1; }
+  .demo-hint{
+    margin-top:16px; font-size:11.5px; background:rgba(212,255,61,0.15); border:1px dashed rgba(212,255,61,0.6);
+    padding:8px 10px; border-radius:10px; color:var(--foil); opacity:0.9;
+  }
+
+  /* ---- app header ---- */
+  .app-header{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:16px 18px 10px; flex-shrink:0; background:var(--foil);
+  }
+  .brand-mini{ font-family:'Unbounded'; font-weight:900; font-size:19px; }
+  .brand-mini em{ font-style:normal; color:var(--riot); }
+  .avatar{
+    width:36px; height:36px; border-radius:50%; background:var(--riot); color:var(--white);
+    display:flex; align-items:center; justify-content:center; font-weight:800; font-size:14px;
+  }
+
+  .tabhead{ padding:4px 18px 14px; flex-shrink:0; }
+  .tabhead h1{ font-family:'Unbounded'; font-size:22px; font-weight:700; }
+  .tabhead p{ font-size:12.5px; opacity:0.6; margin-top:3px; }
+
+  .content{ flex:1; overflow-y:auto; padding:0 18px 90px; }
+
+  /* ---- chips ---- */
+  .chiprow{ display:flex; gap:8px; overflow-x:auto; padding-bottom:14px; }
+  .chiprow::-webkit-scrollbar{ display:none; }
+  .chip{
+    padding:8px 15px; border-radius:100px; border:2px solid var(--line); font-size:12.5px;
+    font-weight:700; white-space:nowrap; flex-shrink:0; background:var(--white);
+  }
+  .chip.active{ background:var(--ink); color:var(--foil); border-color:var(--ink); }
+
+  /* ---- product grid ---- */
+  .grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .card{
+    background:var(--white); border-radius:18px; overflow:hidden; border:2px solid var(--line);
+    display:flex; flex-direction:column;
+  }
+  .swatch{ height:118px; position:relative; }
+  .tag-sticker{
+    position:absolute; top:8px; left:-4px; background:var(--lime); color:var(--ink);
+    font-family:'Unbounded'; font-size:9.5px; font-weight:700; padding:3px 9px 3px 12px;
+    transform:rotate(-6deg); border-radius:0 6px 6px 0; box-shadow:1px 2px 0 rgba(0,0,0,0.15);
+  }
+  .card-body{ padding:11px 12px 13px; }
+  .card-body h3{ font-size:13.5px; font-weight:800; line-height:1.25; margin-bottom:3px; }
+  .card-body .cat{ font-size:10.5px; opacity:0.55; font-weight:600; margin-bottom:8px; }
+  .card-row{ display:flex; align-items:center; justify-content:space-between; }
+  .price{ font-family:'Unbounded'; font-size:14px; font-weight:700; }
+  .addbtn{
+    width:30px; height:30px; border-radius:50%; background:var(--ink); color:var(--foil);
+    font-size:17px; font-weight:700; display:flex; align-items:center; justify-content:center;
+    transition:transform .12s ease;
+  }
+  .addbtn:active{ transform:scale(0.85); }
+
+  /* patterns */
+  .pat-stripes{ background:repeating-linear-gradient(115deg, var(--riot) 0 10px, var(--bubblegum) 10px 20px); }
+  .pat-stripes-v{ background:repeating-linear-gradient(5deg, var(--ink) 0 8px, var(--riot) 8px 16px); }
+  .pat-dots{ background:radial-gradient(circle, var(--riot) 32%, transparent 34%) 0 0/16px 16px, var(--bubblegum); }
+  .pat-dots-sm{ background:radial-gradient(circle, var(--ink) 26%, transparent 28%) 0 0/10px 10px, var(--lime); }
+  .pat-dots-lg{ background:radial-gradient(circle, var(--bubblegum) 40%, transparent 42%) 0 0/28px 28px, var(--riot); }
+  .pat-check{ background:linear-gradient(45deg, var(--ink) 25%, transparent 25%, transparent 75%, var(--ink) 75%) 0 0/18px 18px, linear-gradient(45deg, var(--ink) 25%, transparent 25%, transparent 75%, var(--ink) 75%) 9px 9px/18px 18px, var(--bubblegum); }
+  .pat-cross{ background:linear-gradient(var(--riot) 1.5px, transparent 1.5px) 0 0/14px 14px, linear-gradient(90deg, var(--riot) 1.5px, transparent 1.5px) 0 0/14px 14px, var(--foil); }
+  .pat-zigzag{ background:linear-gradient(135deg, var(--riot) 25%, transparent 25%) 0 0/20px 20px, linear-gradient(225deg, var(--riot) 25%, transparent 25%) 0 0/20px 20px, var(--ink); }
+  .pat-plaid{ background:repeating-linear-gradient(0deg, rgba(255,45,135,0.5) 0 4px, transparent 4px 24px), repeating-linear-gradient(90deg, rgba(23,8,18,0.6) 0 4px, transparent 4px 24px), var(--bubblegum); }
+  .pat-solid{ background:linear-gradient(145deg, var(--lime), #9CD400); }
+  .pat-solid2{ background:linear-gradient(145deg, var(--ink), #3A1228); }
+
+  /* ---- closet ---- */
+  .closet-item{
+    display:flex; gap:12px; background:var(--white); border:2px solid var(--line); border-radius:16px;
+    padding:11px; margin-bottom:10px; align-items:center;
+  }
+  .closet-swatch{ width:52px; height:52px; border-radius:12px; flex-shrink:0; }
+  .closet-info{ flex:1; min-width:0; }
+  .closet-info h3{ font-size:14px; font-weight:800; }
+  .closet-info p{ font-size:11.5px; opacity:0.55; margin-top:2px; }
+  .icon-btn{
+    width:32px; height:32px; border-radius:9px; display:flex; align-items:center; justify-content:center;
+    font-size:14px; background:rgba(23,8,18,0.06);
+  }
+  .icon-btn.danger{ color:var(--riot); }
+  .icon-btn.listed{ background:var(--lime); color:var(--ink); }
+
+  /* ---- stylist ---- */
+  .stylist-card{ background:var(--white); border:2px solid var(--line); border-radius:18px; padding:16px; margin-bottom:6px; }
+  .stylist-card h3{ font-family:'Unbounded'; font-size:14px; margin-bottom:4px; }
+  .stylist-card .caption{ font-size:12px; opacity:0.65; margin-bottom:14px; line-height:1.5; }
+  .stylist-anchor{ display:flex; align-items:center; gap:10px; margin-bottom:12px; }
+  .stylist-anchor b{ font-size:13.5px; }
+  .stylist-anchor .lbl{ font-size:11px; opacity:0.55; margin:0; }
+  .stylist-row{ display:flex; gap:10px; margin-bottom:14px; overflow-x:auto; }
+  .stylist-piece{ flex-shrink:0; width:74px; text-align:center; }
+  .stylist-swatch{ width:74px; height:74px; border-radius:14px; margin-bottom:6px; }
+  .stylist-piece span{ font-size:10px; font-weight:700; display:block; line-height:1.3; }
+  .stylist-actions{ display:flex; gap:10px; }
+  .stylist-actions button{ flex:1; }
+
+  .fab{
+    position:absolute; right:20px; bottom:96px; width:54px; height:54px; border-radius:50%;
+    background:var(--riot); color:var(--white); font-size:26px; font-weight:700;
+    display:flex; align-items:center; justify-content:center; box-shadow:0 10px 24px rgba(255,45,135,0.5);
+    z-index:30; transition:transform .12s ease;
+  }
+  .fab:active{ transform:scale(0.9) rotate(90deg); }
+
+  /* ---- empty state ---- */
+  .empty{ text-align:center; padding:50px 10px; opacity:0.75; }
+  .empty .emoji{ font-size:34px; margin-bottom:10px; }
+  .empty h3{ font-family:'Unbounded'; font-size:15px; margin-bottom:5px; }
+  .empty p{ font-size:12.5px; opacity:0.7; max-width:24ch; margin:0 auto 16px; }
+
+  /* ---- bag ---- */
+  .bag-item{ display:flex; gap:12px; padding:12px 0; border-bottom:1px solid var(--line); align-items:center; }
+  .bag-swatch{ width:52px; height:52px; border-radius:12px; flex-shrink:0; }
+  .bag-info{ flex:1; }
+  .bag-info h3{ font-size:13.5px; font-weight:800; }
+  .bag-info .price{ font-size:12.5px; margin-top:2px; }
+  .qty{ display:flex; align-items:center; gap:9px; }
+  .qty button{ width:24px; height:24px; border-radius:7px; background:rgba(23,8,18,0.08); font-weight:700; }
+  .qty span{ font-weight:700; font-size:13px; min-width:14px; text-align:center; }
+  .summary{ background:var(--white); border:2px solid var(--line); border-radius:16px; padding:16px; margin-top:16px; }
+  .sumrow{ display:flex; justify-content:space-between; font-size:13px; margin-bottom:8px; opacity:0.75; }
+  .sumrow.total{ font-weight:800; font-size:15.5px; opacity:1; padding-top:8px; border-top:1px dashed var(--line); }
+
+  /* ---- orders ---- */
+  .order-card{ background:var(--white); border:2px solid var(--line); border-radius:16px; padding:14px; margin-bottom:12px; }
+  .order-top{ display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px; }
+  .order-top h3{ font-size:13px; font-weight:800; }
+  .order-top span{ font-size:10.5px; opacity:0.55; }
+  .badge{ font-size:10px; font-weight:800; padding:4px 10px; border-radius:100px; background:rgba(212,255,61,0.35); color:#4A5A00; }
+  .order-items{ font-size:12px; opacity:0.7; line-height:1.6; }
+
+  /* ---- profile ---- */
+  .profile-card{ background:var(--white); border:2px solid var(--line); border-radius:18px; padding:20px; text-align:center; margin-bottom:16px; }
+  .profile-avatar{ width:64px; height:64px; border-radius:50%; background:var(--riot); color:var(--white); font-weight:800; font-size:24px; display:flex; align-items:center; justify-content:center; margin:0 auto 12px; }
+  .profile-card h2{ font-family:'Unbounded'; font-size:16px; }
+  .profile-card p{ font-size:12px; opacity:0.55; margin-top:3px; }
+  .stat-row{ display:flex; gap:10px; margin-bottom:16px; }
+  .stat{ flex:1; background:var(--white); border:2px solid var(--line); border-radius:14px; padding:12px; text-align:center; }
+  .stat .num{ font-family:'Unbounded'; font-size:18px; font-weight:700; color:var(--riot); }
+  .stat .lbl{ font-size:10.5px; opacity:0.6; margin-top:2px; }
+  .logout-btn{ width:100%; padding:13px; border-radius:14px; border:2px solid var(--riot); color:var(--riot); font-weight:800; font-size:14px; background:var(--white); }
+
+  /* ---- tab bar ---- */
+  .tabbar{
+    display:flex; flex-shrink:0; background:var(--white); border-top:2px solid var(--line);
+    padding:10px 8px 14px;
+  }
+  .tabbtn{
+    flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; font-size:9.5px;
+    font-weight:700; color:var(--ink); opacity:0.4; position:relative;
+  }
+  .tabbtn .ic{ font-size:19px; }
+  .tabbtn.active{ opacity:1; color:var(--riot); }
+  .cart-dot{
+    position:absolute; top:-3px; right:calc(50% - 15px); background:var(--riot); color:var(--white);
+    font-size:9px; font-weight:800; min-width:15px; height:15px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center; padding:0 2px;
+  }
+
+  /* ---- modal ---- */
+  .modal-backdrop{
+    position:absolute; inset:0; background:rgba(23,8,18,0.55); display:none; align-items:flex-end;
+    justify-content:center; z-index:100;
+  }
+  .modal-backdrop.active{ display:flex; }
+  .modal{
+    width:100%; background:var(--foil); border-radius:26px 26px 0 0; padding:24px 20px 28px;
+    max-height:85%; overflow-y:auto; animation: rise .22s ease;
+  }
+  @keyframes rise{ from{ transform:translateY(30px); opacity:0; } to{ transform:translateY(0); opacity:1; } }
+  .modal h2{ font-family:'Unbounded'; font-size:18px; margin-bottom:16px; }
+  .swatch-picker{ display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap; }
+  .swatch-opt{ width:34px; height:34px; border-radius:10px; border:3px solid transparent; }
+  .swatch-opt.selected{ border-color:var(--ink); }
+  .modal-actions{ display:flex; gap:10px; margin-top:6px; }
+  .modal-actions .btn-primary{ flex:1; }
+  .btn-ghost{ flex:1; padding:14px; border-radius:14px; background:rgba(23,8,18,0.06); font-weight:800; font-size:14px; }
+
+  .toast{
+    position:absolute; top:34px; left:50%; transform:translateX(-50%) translateY(-20px);
+    background:var(--ink); color:var(--foil); padding:11px 20px; border-radius:100px; font-size:12.5px;
+    font-weight:700; opacity:0; transition:all .25s ease; z-index:200; pointer-events:none; white-space:nowrap;
+  }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+  @media (max-width:440px){
+    body{ padding:0; }
+    .phone{ height:100vh; max-height:100vh; border-radius:0; border:none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="notch"></div>
+  <div class="marquee"><span>BLUSH RIOT — WEAR THE NOISE</span></div>
+  <div id="toast" class="toast"></div>
+
+  <!-- AUTH -->
+  <div class="screen active" id="screen-auth">
+    <div class="wordmark">BLUSH<br><em>RIOT</em></div>
+    <p class="tagline">Loud clothes for people done playing quiet. Shop new drops, thrift preloved pieces, keep your closet in rotation.</p>
+    <div class="authcard">
+      <div class="authtabs">
+        <button id="tab-login" class="active" onclick="setAuthMode('login')">Log in</button>
+        <button id="tab-signup" onclick="setAuthMode('signup')">Sign up</button>
+      </div>
+
+      <div id="signup-fields" style="display:none;">
+        <div class="field"><label for="su-name">Name</label><input id="su-name" placeholder="Rhea Kapoor"></div>
+      </div>
+      <div class="field"><label for="au-user">Username</label><input id="au-user" placeholder="rhea.k"></div>
+      <div id="signup-email-field" class="field" style="display:none;">
+        <label for="su-email">Email</label><input id="su-email" type="email" placeholder="rhea@mail.com">
+      </div>
+      <div class="field"><label for="au-pass">Password</label><input id="au-pass" type="password" placeholder="••••••••"></div>
+      <div class="err" id="auth-err"></div>
+      <button class="btn-primary" id="auth-submit" onclick="submitAuth()">Log in</button>
+      <p class="switchline" id="switchline">New here? <b onclick="setAuthMode('signup')">Create an account</b></p>
+    </div>
+    <p class="demo-hint">Reviewer login — username <b>demo</b>, password <b>demo1234</b>. Or sign up fresh, it takes ten seconds.</p>
+  </div>
+
+  <!-- APP -->
+  <div class="screen" id="screen-app">
+    <div class="app-header">
+      <div class="brand-mini">BLUSH<em>RIOT</em></div>
+      <div class="avatar" id="header-avatar">R</div>
+    </div>
+
+    <!-- SHOP -->
+    <div class="content tabcontent" id="tab-shop">
+      <div class="tabhead" style="padding-left:0; padding-right:0;">
+        <h1>This week's drop</h1>
+        <p>Ten pieces. No restock promises.</p>
+      </div>
+      <div class="chiprow" id="shop-chips"></div>
+      <div class="grid" id="shop-grid"></div>
+    </div>
+
+    <!-- CLOSET -->
+    <div class="content tabcontent" id="tab-closet" style="display:none;">
+      <div class="tabhead" style="padding-left:0; padding-right:0;">
+        <h1>Your closet</h1>
+        <p>Every piece you own, logged and ready.</p>
+      </div>
+      <div id="closet-list"></div>
+    </div>
+
+    <!-- THRIFT -->
+    <div class="content tabcontent" id="tab-thrift" style="display:none;">
+      <div class="tabhead" style="padding-left:0; padding-right:0;">
+        <h1>Thrift</h1>
+        <p>Preloved pieces, yours and the community's.</p>
+      </div>
+      <div id="thrift-grid"></div>
+    </div>
+
+    <!-- STYLIST -->
+    <div class="content tabcontent" id="tab-stylist" style="display:none;">
+      <div class="tabhead" style="padding-left:0; padding-right:0;">
+        <h1>Your stylist</h1>
+        <p>Outfits built around your closet, or pick a mood.</p>
+      </div>
+      <div id="stylist-wardrobe"></div>
+      <div class="tabhead" style="padding:16px 0 10px;">
+        <h1 style="font-size:14.5px;">Pick a mood</h1>
+      </div>
+      <div class="chiprow" id="stylist-chips"></div>
+      <div id="stylist-look"></div>
+    </div>
+
+    <!-- BAG -->
+    <div class="content tabcontent" id="tab-bag" style="display:none;">
+      <div class="tabhead" style="padding-left:0; padding-right:0;">
+        <h1>Your bag</h1>
+        <p>Review before it's yours.</p>
+      </div>
+      <div id="bag-list"></div>
+      <div id="bag-summary"></div>
+    </div>
+
+    <!-- ORDERS / PROFILE -->
+    <div class="content tabcontent" id="tab-you" style="display:none;">
+      <div class="tabhead" style="padding-left:0; padding-right:0;">
+        <h1>You</h1>
+        <p>Account and order history.</p>
+      </div>
+      <div class="profile-card">
+        <div class="profile-avatar" id="profile-avatar">R</div>
+        <h2 id="profile-name">—</h2>
+        <p id="profile-meta">—</p>
+      </div>
+      <div class="stat-row">
+        <div class="stat"><div class="num" id="stat-orders">0</div><div class="lbl">Orders</div></div>
+        <div class="stat"><div class="num" id="stat-closet">0</div><div class="lbl">Closet items</div></div>
+        <div class="stat"><div class="num" id="stat-preloved">0</div><div class="lbl">Preloved bought</div></div>
+      </div>
+      <div id="orders-list"></div>
+      <button class="logout-btn" onclick="logout()">Log out</button>
+    </div>
+
+    <div class="fab" id="closet-fab" style="display:none;" onclick="openClosetModal()">+</div>
+
+    <div class="tabbar">
+      <button class="tabbtn active" data-tab="shop" onclick="setTab('shop')"><span class="ic">◆</span>Shop</button>
+      <button class="tabbtn" data-tab="closet" onclick="setTab('closet')"><span class="ic">▤</span>Closet</button>
+      <button class="tabbtn" data-tab="thrift" onclick="setTab('thrift')"><span class="ic">♻</span>Thrift</button>
+      <button class="tabbtn" data-tab="stylist" onclick="setTab('stylist')"><span class="ic">✦</span>Stylist</button>
+      <button class="tabbtn" data-tab="bag" onclick="setTab('bag')" style="position:relative;">
+        <span class="ic">◐</span>Bag<span class="cart-dot" id="cart-dot" style="display:none;">0</span>
+      </button>
+      <button class="tabbtn" data-tab="you" onclick="setTab('you')"><span class="ic">●</span>You</button>
+    </div>
+  </div>
+</div>
+
+<!-- CLOSET MODAL -->
+<div class="modal-backdrop" id="closet-modal-backdrop">
+  <div class="modal">
+    <h2 id="closet-modal-title">Add to closet</h2>
+    <div class="field"><label>Item name</label><input id="ci-name" placeholder="Vintage denim jacket"></div>
+    <div class="field"><label>Category</label>
+      <select id="ci-category" style="width:100%; padding:12px 14px; border-radius:12px; border:2px solid var(--line); background:var(--white);">
+        <option>Tops</option><option>Bottoms</option><option>Outerwear</option><option>Dresses</option><option>Shoes</option><option>Accessories</option>
+      </select>
+    </div>
+    <div class="field"><label>Color swatch</label>
+      <div class="swatch-picker" id="ci-swatch-picker"></div>
+    </div>
+    <div class="field"><label>Notes (optional)</label><input id="ci-notes" placeholder="Thrifted, needs new buttons"></div>
+    <div class="field"><label>Resale price (optional — needed to list for thrift)</label><input id="ci-price" type="number" placeholder="e.g. 899"></div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeClosetModal()">Cancel</button>
+      <button class="btn-primary" onclick="saveClosetItem()">Save item</button>
+    </div>
+  </div>
+</div>
+
+<!-- CHECKOUT MODAL -->
+<div class="modal-backdrop" id="checkout-modal-backdrop">
+  <div class="modal">
+    <h2>Checkout</h2>
+    <div class="field"><label>Full name</label><input id="co-name"></div>
+    <div class="field"><label>Address</label><input id="co-address" placeholder="Street, area"></div>
+    <div class="field"><label>City</label><input id="co-city" placeholder="Ahmedabad"></div>
+    <div class="summary" style="margin-top:0; margin-bottom:16px;">
+      <div class="sumrow"><span>Items</span><span id="co-count">0</span></div>
+      <div class="sumrow total"><span>Total</span><span id="co-total">₹0</span></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeCheckoutModal()">Back</button>
+      <button class="btn-primary btn-lime" onclick="placeOrder()">Place order</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ---------------- data ---------------- */
+const PRODUCTS = [
+  {id:'p1', name:'Riot Blazer', cat:'Outerwear', price:4999, pat:'pat-stripes', badge:'NEW'},
+  {id:'p2', name:'Static Slip Dress', cat:'Dresses', price:3499, pat:'pat-dots'},
+  {id:'p3', name:'Bubblegum Cargo Pants', cat:'Bottoms', price:2799, pat:'pat-check'},
+  {id:'p4', name:'Neon Trace Hoodie', cat:'Outerwear', price:2999, pat:'pat-zigzag', badge:'HOT'},
+  {id:'p5', name:'Foil Mini Skirt', cat:'Bottoms', price:1999, pat:'pat-cross'},
+  {id:'p6', name:'Static Cami', cat:'Tops', price:1499, pat:'pat-dots-sm'},
+  {id:'p7', name:'Riot Platform Boots', cat:'Shoes', price:5499, pat:'pat-stripes-v'},
+  {id:'p8', name:'Chrome Hoop Set', cat:'Accessories', price:899, pat:'pat-solid'},
+  {id:'p9', name:'Flare Denim Jacket', cat:'Outerwear', price:3999, pat:'pat-plaid'},
+  {id:'p10', name:'Bubble Bucket Hat', cat:'Accessories', price:799, pat:'pat-dots-lg'},
+  {id:'p11', name:'Riot Wrap Dress', cat:'Dresses', price:2799, pat:'pat-plaid'},
+  {id:'p12', name:'Halter Slip Dress', cat:'Dresses', price:2199, pat:'pat-dots-sm', badge:'NEW'},
+  {id:'p13', name:'Corset Mini Dress', cat:'Dresses', price:3299, pat:'pat-check'},
+  {id:'p14', name:'Maxi Static Dress', cat:'Dresses', price:3799, pat:'pat-stripes-v'},
+];
+const THRIFT_PRODUCTS = [
+  {id:'t1', name:'Preloved Denim Jacket', cat:'Outerwear', price:1299, pat:'pat-plaid', seller:'@rhea.thrifts', condition:'Gently worn'},
+  {id:'t2', name:'Vintage Slip Dress', cat:'Dresses', price:999, pat:'pat-dots', seller:'@styled.by.priya', condition:'Like new'},
+  {id:'t3', name:'Retro Platform Boots', cat:'Shoes', price:1899, pat:'pat-stripes-v', seller:'@closetswap.del', condition:'Well loved'},
+  {id:'t4', name:'Y2K Cargo Pants', cat:'Bottoms', price:899, pat:'pat-check', seller:'@thriftmafia', condition:'Good'},
+  {id:'t5', name:'Statement Hoop Earrings', cat:'Accessories', price:349, pat:'pat-solid', seller:'@rerun.reworn', condition:'Like new'},
+  {id:'t6', name:'Oversized Graphic Tee', cat:'Tops', price:599, pat:'pat-dots-sm', seller:'@secondlife.style', condition:'Gently worn'},
+];
+const CATEGORIES = ['All', ...new Set(PRODUCTS.map(p=>p.cat))];
+const SWATCHES = [
+  {cls:'pat-stripes', name:'Riot stripe'}, {cls:'pat-dots', name:'Bubble dot'},
+  {cls:'pat-check', name:'Checker'}, {cls:'pat-zigzag', name:'Zigzag'},
+  {cls:'pat-cross', name:'Grid'}, {cls:'pat-solid', name:'Lime'},
+  {cls:'pat-plaid', name:'Plaid'}, {cls:'pat-solid2', name:'Ink'},
+];
+
+const VIBES = [
+  {id:'chaotic', label:'Chaotic good', ids:['p1','p6','p3','p7'], caption:"Clashing on purpose \u2014 blazer over a cami, cargo utility, platforms with attitude."},
+  {id:'soft', label:'Soft riot', ids:['p2','p9','p10'], caption:"Turned down half a notch \u2014 slip dress, denim jacket, bucket hat for easy days."},
+  {id:'main', label:'Main character', ids:['p4','p5','p7','p8'], caption:"Hoodie-and-mini energy, boots and hoops loud enough to announce you."},
+  {id:'thriftfit', label:'Thrifted chic', ids:['t1','t6','t5'], caption:"Preloved denim, an oversized tee, hoops \u2014 layered basics that look found, not bought."},
+  {id:'date', label:'Date night riot', ids:['p13','p7','p8'], caption:"Corset mini, platforms, hoops \u2014 soft shape, hard edges."},
+  {id:'wrap', label:'Wrap it up', ids:['p11','t3','t5'], caption:"Wrap dress with preloved boots and hoops \u2014 new piece, old souls."},
+];
+const CLOSET_COMPLEMENTS = {
+  'Tops':['Bottoms','Outerwear','Shoes'], 'Bottoms':['Tops','Outerwear','Shoes'],
+  'Outerwear':['Tops','Bottoms','Shoes'], 'Dresses':['Outerwear','Shoes','Accessories'],
+  'Shoes':['Tops','Bottoms'], 'Accessories':['Tops','Bottoms','Outerwear'],
+};
+const WARDROBE_CAPTIONS = [
+  "Anchored the whole look on this and filled in around it.",
+  "Kept your piece front and center, built the rest to match its energy.",
+  "Started from what you already own and worked outward.",
+];
+let stylistState = { selectedVibe:null, wardrobeSuggestion:null };
+
+let state = {
+  user:null,
+  shopFilter:'All',
+  bag:[],
+  closet:[],
+  orders:[],
+  editingItemId:null,
+  selectedSwatch:SWATCHES[0].cls,
+};
+
+/* ---------------- storage helpers ---------------- */
+async function storeGet(key){
+  try{ const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : null; }
+  catch(e){ return null; }
+}
+async function storeSet(key, value){
+  try{ localStorage.setItem(key, JSON.stringify(value)); }catch(e){}
+}
+async function storeDelete(key){
+  try{ localStorage.removeItem(key); }catch(e){}
+}
+
+async function getUsers(){ return (await storeGet('riot:users')) || []; }
+async function saveUsers(list){ await storeSet('riot:users', list); }
+
+/* ---------------- toast ---------------- */
+let toastTimer;
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove('show'), 1800);
+}
+
+/* ---------------- auth ---------------- */
+function setAuthMode(mode){
+  document.getElementById('tab-login').classList.toggle('active', mode==='login');
+  document.getElementById('tab-signup').classList.toggle('active', mode==='signup');
+  document.getElementById('signup-fields').style.display = mode==='signup' ? 'block' : 'none';
+  document.getElementById('signup-email-field').style.display = mode==='signup' ? 'block' : 'none';
+  document.getElementById('auth-submit').textContent = mode==='signup' ? 'Create account' : 'Log in';
+  document.getElementById('auth-submit').onclick = mode==='signup' ? signup : login;
+  document.getElementById('switchline').innerHTML = mode==='signup'
+    ? 'Already riot-approved? <b onclick="setAuthMode(\'login\')">Log in</b>'
+    : 'New here? <b onclick="setAuthMode(\'signup\')">Create an account</b>';
+  document.getElementById('auth-err').textContent = '';
+  state.authMode = mode;
+}
+function submitAuth(){ (state.authMode==='signup' ? signup : login)(); }
+
+async function ensureDemoUser(){
+  let users = await getUsers();
+  if(!users.find(u=>u.username==='demo')){
+    users.push({username:'demo', password:'demo1234', name:'Demo Reviewer', email:'demo@blushriot.app', joinedAt:Date.now()});
+    await saveUsers(users);
+  }
+}
+
+async function signup(){
+  const name = document.getElementById('su-name').value.trim();
+  const username = document.getElementById('au-user').value.trim().toLowerCase();
+  const email = document.getElementById('su-email').value.trim();
+  const pass = document.getElementById('au-pass').value;
+  const err = document.getElementById('auth-err');
+  if(!name || !username || !email || !pass){ err.textContent = 'Fill in every field to continue.'; return; }
+  if(pass.length < 4){ err.textContent = 'Password needs at least 4 characters.'; return; }
+  const users = await getUsers();
+  if(users.find(u=>u.username===username)){ err.textContent = 'That username is taken. Try another.'; return; }
+  users.push({username, password:pass, name, email, joinedAt:Date.now()});
+  await saveUsers(users);
+  err.textContent = '';
+  await completeLogin({username, name, email});
+}
+
+async function login(){
+  const username = document.getElementById('au-user').value.trim().toLowerCase();
+  const pass = document.getElementById('au-pass').value;
+  const err = document.getElementById('auth-err');
+  if(!username || !pass){ err.textContent = 'Enter your username and password.'; return; }
+  await ensureDemoUser();
+  const users = await getUsers();
+  const found = users.find(u=>u.username===username && u.password===pass);
+  if(!found){ err.textContent = 'No match. Check your username and password.'; return; }
+  err.textContent = '';
+  await completeLogin(found);
+}
+
+async function completeLogin(user){
+  state.user = user;
+  await storeSet('riot:session', {username:user.username});
+  await loadUserData();
+  renderApp();
+  document.getElementById('screen-auth').classList.remove('active');
+  document.getElementById('screen-app').classList.add('active');
+  toast(`Welcome, ${user.name || user.username}`);
+}
+
+async function logout(){
+  await storeDelete('riot:session');
+  state = {user:null, shopFilter:'All', bag:[], closet:[], orders:[], editingItemId:null, selectedSwatch:SWATCHES[0].cls};
+  document.getElementById('au-user').value = '';
+  document.getElementById('au-pass').value = '';
+  document.getElementById('screen-app').classList.remove('active');
+  document.getElementById('screen-auth').classList.add('active');
+  setAuthMode('login');
+}
+
+async function loadUserData(){
+  const u = state.user.username;
+  state.closet = (await storeGet(`riot:closet:${u}`)) || [];
+  state.bag = (await storeGet(`riot:bag:${u}`)) || [];
+  state.orders = (await storeGet(`riot:orders:${u}`)) || [];
+}
+async function persistCloset(){ await storeSet(`riot:closet:${state.user.username}`, state.closet); }
+async function persistBag(){ await storeSet(`riot:bag:${state.user.username}`, state.bag); }
+async function persistOrders(){ await storeSet(`riot:orders:${state.user.username}`, state.orders); }
+
+/* ---------------- tabs ---------------- */
+function setTab(tab){
+  document.querySelectorAll('.tabcontent').forEach(el=>el.style.display='none');
+  document.getElementById('tab-'+tab).style.display='block';
+  document.querySelectorAll('.tabbtn').forEach(b=>b.classList.toggle('active', b.dataset.tab===tab));
+  document.getElementById('closet-fab').style.display = tab==='closet' ? 'flex' : 'none';
+  if(tab==='you') renderProfile();
+  if(tab==='stylist'){ renderStylistWardrobe(); renderStylistChips(); renderStylistLook(); }
+  if(tab==='thrift') renderThrift();
+}
+
+/* ---------------- render: shop ---------------- */
+function renderShopChips(){
+  const wrap = document.getElementById('shop-chips');
+  wrap.innerHTML = CATEGORIES.map(c=>
+    `<button class="chip ${c===state.shopFilter?'active':''}" onclick="filterShop('${c}')">${c}</button>`
+  ).join('');
+}
+function filterShop(cat){ state.shopFilter = cat; renderShopChips(); renderShopGrid(); }
+function renderShopGrid(){
+  const list = PRODUCTS.filter(p=> state.shopFilter==='All' || p.cat===state.shopFilter);
+  document.getElementById('shop-grid').innerHTML = list.map(p=>`
+    <div class="card">
+      <div class="swatch ${p.pat}">${p.badge?`<div class="tag-sticker">${p.badge}</div>`:''}</div>
+      <div class="card-body">
+        <h3>${p.name}</h3>
+        <div class="cat">${p.cat}</div>
+        <div class="card-row">
+          <span class="price">₹${p.price.toLocaleString('en-IN')}</span>
+          <button class="addbtn" onclick="addToBag('${p.id}')">+</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+async function addToBag(id){
+  const existing = state.bag.find(b=>b.id===id);
+  if(existing) existing.qty += 1;
+  else state.bag.push({id, qty:1});
+  await persistBag();
+  renderCartDot();
+  toast('Added to bag');
+}
+
+/* ---------------- render: thrift (circular) ---------------- */
+function thriftCardHtml(p, ownerLabel){
+  return `<div class="card">
+    <div class="swatch ${p.pat}"><div class="tag-sticker" style="background:var(--bubblegum); color:var(--white);">PRELOVED</div></div>
+    <div class="card-body">
+      <h3>${escapeHtml(p.name)}</h3>
+      <div class="cat">${ownerLabel || p.seller} · ${p.condition || p.cat}</div>
+      <div class="card-row">
+        <span class="price">₹${(p.price||0).toLocaleString('en-IN')}</span>
+        <button class="addbtn" onclick="addToBag('${p.id}')">+</button>
+      </div>
+    </div>
+  </div>`;
+}
+function renderThrift(){
+  const wrap = document.getElementById('thrift-grid');
+  if(!wrap) return;
+  const myListings = state.closet.filter(i=>i.listed);
+  let html = '';
+  if(myListings.length){
+    html += `<div class="tabhead" style="padding:0 0 8px;"><h1 style="font-size:14.5px;">From your closet</h1></div>
+      <div class="grid" style="margin-bottom:20px;">${myListings.map(it=>thriftCardHtml({id:it.id,name:it.name,cat:it.category,price:it.price,pat:it.pat,condition:it.category}, 'You')).join('')}</div>`;
+  }
+  html += `<div class="tabhead" style="padding:0 0 8px;"><h1 style="font-size:14.5px;">Community drops</h1></div>
+    <div class="grid">${THRIFT_PRODUCTS.map(p=>thriftCardHtml(p)).join('')}</div>`;
+  wrap.innerHTML = html;
+}
+
+/* ---------------- render: closet (CRUD) ---------------- */
+function renderCloset(){
+  const wrap = document.getElementById('closet-list');
+  if(state.closet.length===0){
+    wrap.innerHTML = `<div class="empty"><div class="emoji">🧥</div><h3>Your closet is empty</h3><p>Log the pieces you already own — tap the + button to add your first item.</p></div>`;
+    return;
+  }
+  wrap.innerHTML = state.closet.map(it=>`
+    <div class="closet-item">
+      <div class="closet-swatch ${it.pat}"></div>
+      <div class="closet-info">
+        <h3>${escapeHtml(it.name)}</h3>
+        <p>${it.category}${it.notes ? ' · '+escapeHtml(it.notes) : ''}${it.listed ? ' · listed ₹'+(it.price||0).toLocaleString('en-IN') : ''}</p>
+      </div>
+      <button class="icon-btn ${it.listed?'listed':''}" onclick="toggleListed('${it.id}')" title="List for thrift">♻</button>
+      <button class="icon-btn" onclick="editClosetItem('${it.id}')">✎</button>
+      <button class="icon-btn danger" onclick="deleteClosetItem('${it.id}')">✕</button>
+    </div>
+  `).join('');
+}
+async function toggleListed(id){
+  const item = state.closet.find(i=>i.id===id);
+  if(!item.listed && !item.price){ toast('Add a resale price first — tap ✎ to edit'); return; }
+  item.listed = !item.listed;
+  await persistCloset();
+  renderCloset();
+  toast(item.listed ? 'Listed for thrift' : 'Taken off thrift');
+}
+function escapeHtml(s){ return s.replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+function openClosetModal(editId){
+  state.editingItemId = editId || null;
+  const item = editId ? state.closet.find(i=>i.id===editId) : null;
+  document.getElementById('closet-modal-title').textContent = editId ? 'Edit item' : 'Add to closet';
+  document.getElementById('ci-name').value = item ? item.name : '';
+  document.getElementById('ci-category').value = item ? item.category : 'Tops';
+  document.getElementById('ci-notes').value = item ? item.notes : '';
+  document.getElementById('ci-price').value = item && item.price ? item.price : '';
+  state.selectedSwatch = item ? item.pat : SWATCHES[0].cls;
+  renderSwatchPicker();
+  document.getElementById('closet-modal-backdrop').classList.add('active');
+}
+function editClosetItem(id){ openClosetModal(id); }
+function closeClosetModal(){ document.getElementById('closet-modal-backdrop').classList.remove('active'); }
+function renderSwatchPicker(){
+  document.getElementById('ci-swatch-picker').innerHTML = SWATCHES.map(s=>
+    `<div class="swatch-opt ${s.cls} ${state.selectedSwatch===s.cls?'selected':''}" title="${s.name}" onclick="pickSwatch('${s.cls}')"></div>`
+  ).join('');
+}
+function pickSwatch(cls){ state.selectedSwatch = cls; renderSwatchPicker(); }
+
+async function saveClosetItem(){
+  const name = document.getElementById('ci-name').value.trim();
+  if(!name){ toast('Give the item a name first'); return; }
+  const category = document.getElementById('ci-category').value;
+  const notes = document.getElementById('ci-notes').value.trim();
+  const price = parseInt(document.getElementById('ci-price').value) || 0;
+  if(state.editingItemId){
+    const item = state.closet.find(i=>i.id===state.editingItemId);
+    Object.assign(item, {name, category, notes, price, pat:state.selectedSwatch});
+    toast('Item updated');
+  } else {
+    state.closet.unshift({id:'c'+Date.now(), name, category, notes, price, listed:false, pat:state.selectedSwatch, addedAt:Date.now()});
+    toast('Added to closet');
+  }
+  await persistCloset();
+  closeClosetModal();
+  renderCloset();
+}
+async function deleteClosetItem(id){
+  if(!confirm('Remove this item from your closet?')) return;
+  state.closet = state.closet.filter(i=>i.id!==id);
+  await persistCloset();
+  renderCloset();
+  stylistState.wardrobeSuggestion = null;
+  toast('Item removed');
+}
+
+/* ---------------- render: stylist ---------------- */
+function buildWardrobeSuggestion(){
+  const anchor = state.closet[0];
+  const needed = CLOSET_COMPLEMENTS[anchor.category] || ['Tops','Bottoms'];
+  const pool = PRODUCTS.concat(THRIFT_PRODUCTS);
+  const picks = [];
+  needed.forEach(cat=>{
+    const options = pool.filter(p=>p.cat===cat);
+    if(options.length) picks.push(options[Math.floor(Math.random()*options.length)]);
+  });
+  return { anchor, picks: picks.slice(0,3), caption: WARDROBE_CAPTIONS[Math.floor(Math.random()*WARDROBE_CAPTIONS.length)] };
+}
+function reshuffleWardrobe(){ stylistState.wardrobeSuggestion = buildWardrobeSuggestion(); renderStylistWardrobe(); }
+
+function renderStylistWardrobe(){
+  const wrap = document.getElementById('stylist-wardrobe');
+  if(!wrap) return;
+  if(state.closet.length===0){
+    wrap.innerHTML = `<div class="empty" style="padding:26px 10px;"><div class="emoji">🪄</div><h3>Nothing to build around yet</h3><p>Add a piece to your closet and I'll style a full look around it.</p></div>`;
+    return;
+  }
+  if(!stylistState.wardrobeSuggestion) stylistState.wardrobeSuggestion = buildWardrobeSuggestion();
+  const s = stylistState.wardrobeSuggestion;
+  wrap.innerHTML = `
+    <div class="stylist-card">
+      <div class="stylist-anchor">
+        <div class="closet-swatch ${s.anchor.pat}"></div>
+        <div><p class="lbl">Built around</p><b>${escapeHtml(s.anchor.name)}</b></div>
+      </div>
+      <p class="caption">${s.caption}</p>
+      <div class="stylist-row">
+        ${s.picks.map(p=>`<div class="stylist-piece"><div class="stylist-swatch ${p.pat}"></div><span>${p.name}</span></div>`).join('')}
+      </div>
+      <div class="stylist-actions">
+        <button class="btn-ghost" onclick="reshuffleWardrobe()">Try another</button>
+        <button class="btn-primary" onclick='addLookToBag(${JSON.stringify(s.picks.map(p=>p.id))})'>Add look</button>
+      </div>
+    </div>
+  `;
+}
+
+function renderStylistChips(){
+  const wrap = document.getElementById('stylist-chips');
+  if(!wrap) return;
+  wrap.innerHTML = VIBES.map(v=>
+    `<button class="chip ${stylistState.selectedVibe===v.id?'active':''}" onclick="pickVibe('${v.id}')">${v.label}</button>`
+  ).join('');
+}
+function pickVibe(id){ stylistState.selectedVibe = id; renderStylistChips(); renderStylistLook(); }
+function renderStylistLook(){
+  const wrap = document.getElementById('stylist-look');
+  if(!wrap) return;
+  if(!stylistState.selectedVibe){ wrap.innerHTML=''; return; }
+  const v = VIBES.find(x=>x.id===stylistState.selectedVibe);
+  const items = v.ids.map(id=>PRODUCTS.find(p=>p.id===id));
+  const total = items.reduce((s,p)=>s+p.price,0);
+  wrap.innerHTML = `
+    <div class="stylist-card">
+      <h3>${v.label}</h3>
+      <p class="caption">${v.caption}</p>
+      <div class="stylist-row">
+        ${items.map(p=>`<div class="stylist-piece"><div class="stylist-swatch ${p.pat}"></div><span>${p.name}</span></div>`).join('')}
+      </div>
+      <div class="stylist-actions">
+        <button class="btn-primary" onclick='addLookToBag(${JSON.stringify(v.ids)})'>Add full look · ₹${total.toLocaleString('en-IN')}</button>
+      </div>
+    </div>
+  `;
+}
+async function addLookToBag(ids){
+  ids.forEach(id=>{
+    const existing = state.bag.find(b=>b.id===id);
+    if(existing) existing.qty += 1;
+    else state.bag.push({id, qty:1});
+  });
+  await persistBag();
+  renderCartDot();
+  renderBag();
+  toast('Look added to bag');
+}
+
+/* ---------------- render: bag / checkout (business flow) ---------------- */
+function findProduct(id){
+  let p = PRODUCTS.find(x=>x.id===id);
+  if(p) return {...p, source:'shop'};
+  p = THRIFT_PRODUCTS.find(x=>x.id===id);
+  if(p) return {...p, source:'thrift', seller:p.seller};
+  const c = state.closet.find(x=>x.id===id);
+  if(c) return {id:c.id, name:c.name, cat:c.category, price:c.price||0, pat:c.pat, source:'closet-listing', seller:'You'};
+  return null;
+}
+function renderCartDot(){
+  const count = state.bag.reduce((s,b)=>s+b.qty,0);
+  const dot = document.getElementById('cart-dot');
+  dot.style.display = count>0 ? 'flex' : 'none';
+  dot.textContent = count;
+}
+function renderBag(){
+  const wrap = document.getElementById('bag-list');
+  const sumWrap = document.getElementById('bag-summary');
+  if(state.bag.length===0){
+    wrap.innerHTML = `<div class="empty"><div class="emoji">🛍️</div><h3>Bag's empty</h3><p>Head to Shop and add something too loud to leave behind.</p></div>`;
+    sumWrap.innerHTML = '';
+    return;
+  }
+  wrap.innerHTML = state.bag.map(b=>{
+    const p = findProduct(b.id);
+    return `
+    <div class="bag-item">
+      <div class="bag-swatch ${p.pat}"></div>
+      <div class="bag-info">
+        <h3>${p.name}${p.source!=='shop' ? ' <span style="opacity:0.5; font-weight:600;">· preloved</span>' : ''}</h3>
+        <div class="price">₹${(p.price*b.qty).toLocaleString('en-IN')}</div>
+      </div>
+      <div class="qty">
+        <button onclick="changeQty('${b.id}',-1)">−</button>
+        <span>${b.qty}</span>
+        <button onclick="changeQty('${b.id}',1)">+</button>
+      </div>
+    </div>`;
+  }).join('');
+  const total = bagTotal();
+  sumWrap.innerHTML = `
+    <div class="summary">
+      <div class="sumrow"><span>Subtotal</span><span>₹${total.toLocaleString('en-IN')}</span></div>
+      <div class="sumrow"><span>Shipping</span><span>Free</span></div>
+      <div class="sumrow total"><span>Total</span><span>₹${total.toLocaleString('en-IN')}</span></div>
+    </div>
+    <button class="btn-primary" style="margin-top:14px;" onclick="openCheckout()">Checkout</button>
+  `;
+}
+function bagTotal(){
+  return state.bag.reduce((sum,b)=>{
+    const p = findProduct(b.id);
+    return sum + p.price*b.qty;
+  },0);
+}
+async function changeQty(id, delta){
+  const item = state.bag.find(b=>b.id===id);
+  item.qty += delta;
+  if(item.qty<=0) state.bag = state.bag.filter(b=>b.id!==id);
+  await persistBag();
+  renderBag();
+  renderCartDot();
+}
+
+function openCheckout(){
+  document.getElementById('co-name').value = state.user.name || '';
+  document.getElementById('co-address').value = '';
+  document.getElementById('co-city').value = '';
+  document.getElementById('co-count').textContent = state.bag.reduce((s,b)=>s+b.qty,0);
+  document.getElementById('co-total').textContent = '₹'+bagTotal().toLocaleString('en-IN');
+  document.getElementById('checkout-modal-backdrop').classList.add('active');
+}
+function closeCheckoutModal(){ document.getElementById('checkout-modal-backdrop').classList.remove('active'); }
+
+async function placeOrder(){
+  const name = document.getElementById('co-name').value.trim();
+  const address = document.getElementById('co-address').value.trim();
+  const city = document.getElementById('co-city').value.trim();
+  if(!name || !address || !city){ toast('Fill in your shipping details'); return; }
+  const order = {
+    id:'ORD'+Date.now().toString().slice(-6),
+    items: state.bag.map(b=>{
+      const p = findProduct(b.id);
+      return {name:p.name, qty:b.qty, price:p.price, source:p.source};
+    }),
+    total: bagTotal(),
+    date: Date.now(),
+    shipTo: `${name}, ${address}, ${city}`,
+    status:'Confirmed',
+  };
+  state.orders.unshift(order);
+  const soldFromCloset = state.bag.filter(b=>state.closet.find(i=>i.id===b.id)).map(b=>b.id);
+  if(soldFromCloset.length){
+    state.closet = state.closet.filter(i=>!soldFromCloset.includes(i.id));
+    await persistCloset();
+    stylistState.wardrobeSuggestion = null;
+  }
+  state.bag = [];
+  await persistOrders();
+  await persistBag();
+  closeCheckoutModal();
+  renderBag();
+  renderCartDot();
+  renderCloset();
+  toast(`Order ${order.id} placed`);
+  setTab('you');
+}
+
+/* ---------------- render: profile / orders ---------------- */
+function renderProfile(){
+  const u = state.user;
+  const initial = (u.name || u.username)[0].toUpperCase();
+  document.getElementById('profile-avatar').textContent = initial;
+  document.getElementById('profile-name').textContent = u.name || u.username;
+  document.getElementById('profile-meta').textContent = `@${u.username}`;
+  document.getElementById('stat-orders').textContent = state.orders.length;
+  document.getElementById('stat-closet').textContent = state.closet.length;
+  const prelovedCount = state.orders.reduce((sum,o)=> sum + o.items.filter(i=>i.source && i.source!=='shop').reduce((s,i)=>s+i.qty,0), 0);
+  const prelovedEl = document.getElementById('stat-preloved');
+  if(prelovedEl) prelovedEl.textContent = prelovedCount;
+  const wrap = document.getElementById('orders-list');
+  if(state.orders.length===0){
+    wrap.innerHTML = `<div class="empty" style="padding:30px 10px;"><div class="emoji">📦</div><h3>No orders yet</h3><p>Your order history shows up here once you check out.</p></div>`;
+    return;
+  }
+  wrap.innerHTML = state.orders.map(o=>`
+    <div class="order-card">
+      <div class="order-top">
+        <div><h3>${o.id}</h3><span>${new Date(o.date).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})}</span></div>
+        <span class="badge">${o.status}</span>
+      </div>
+      <div class="order-items">${o.items.map(i=>`${i.qty}× ${i.name}${i.source && i.source!=='shop' ? ' (preloved)' : ''}`).join('<br>')}</div>
+      <div style="margin-top:8px; font-weight:800; font-size:13px;">₹${o.total.toLocaleString('en-IN')}</div>
+    </div>
+  `).join('');
+}
+
+/* ---------------- app boot ---------------- */
+function renderApp(){
+  const initial = (state.user.name || state.user.username)[0].toUpperCase();
+  document.getElementById('header-avatar').textContent = initial;
+  renderShopChips();
+  renderShopGrid();
+  renderCloset();
+  renderBag();
+  renderCartDot();
+  renderProfile();
+  renderStylistWardrobe();
+  renderStylistChips();
+  renderThrift();
+  setTab('shop');
+}
+
+async function boot(){
+  await ensureDemoUser();
+  const session = await storeGet('riot:session');
+  if(session){
+    const users = await getUsers();
+    const user = users.find(u=>u.username===session.username);
+    if(user){
+      state.user = user;
+      await loadUserData();
+      renderApp();
+      document.getElementById('screen-auth').classList.remove('active');
+      document.getElementById('screen-app').classList.add('active');
+      return;
+    }
+  }
+  setAuthMode('login');
+}
+boot();
+</script>
+</body>
+</html>
